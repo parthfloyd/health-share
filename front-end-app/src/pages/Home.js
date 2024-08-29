@@ -40,9 +40,9 @@ function Home() {
 
   const handleQuery = async (query) => {
     try {
-      const url = new URL(API_URL + "/healthshare/api/querydata");
-      url.searchParams.append("query", query);
-      const response = await fetch(url, {
+      // const url = new URL(API_URL + "/healthshare/api/querydata");
+      // url.searchParams.append("query", query);
+      const response = await fetch(API_URL + `/healthshare/api/querydata?query=${query}`, {
         mode: "cors",
       });
       const result = await response.json();
@@ -55,9 +55,9 @@ function Home() {
 
   const handleSortBy = async (source) => {
     try {
-      const url = new URL(API_URL + "/healthshare/api/sortbysource");
-      url.searchParams.append("source", source);
-      const response = await fetch(url, {
+      // const url = new URL(API_URL + `/healthshare/api/sortbysource?source=${source}`);
+      // url.searchParams.append("source", source);
+      const response = await fetch(API_URL + `/healthshare/api/sortbysource?source=${source}`, {
         mode: "cors",
       });
       const result = await response.json();
