@@ -30,6 +30,7 @@ const Navbar = () => {
         <a href="/">Home</a>
         <a href="/visualize">Data</a>
         <a href="/analyze">Analytics</a>
+        <a href="/chat">Chat</a>
         <button onClick={handleScrollToAbout}>About</button>
         <button onClick={handleScrollToTeam}>Contact</button>
 

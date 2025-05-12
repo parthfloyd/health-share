@@ -7,6 +7,8 @@ var logger = require("morgan");
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var healthshareRouter = require("./routes/healthshare");
+var ollamaRouter = require("./routes/ollama");
+var ragChatRouter = require("./routes/ragchat");
 var cors = require("cors");
 var app = express();
 
@@ -23,6 +25,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/healthshare", healthshareRouter);
+app.use("/ollama", ollamaRouter);
+app.use("/ragchat", ragChatRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

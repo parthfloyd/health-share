@@ -5,6 +5,8 @@ import Navbar from "./components/Navbar.js";
 import Footer from "./components/Footer.js";
 import Search from "./components/AdvancedSearch.js";
 import Article from "./pages/DisplayArticle.js";
+import LLMChat from "./components/LLMChat.js";
+import ChatAssistant from "./components/ChatAssistant";
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 function App() {
@@ -16,9 +18,11 @@ function App() {
         <Route exact path="/visualize" element={<Home />} />
         <Route exact path="/search" element={<Search />} />
         <Route exact path="/analyze" element={<Analytics />} />
+        <Route exact path="/chat" element={<LLMChat />} />
         <Route path="/article/:articleId" element={<Article />} />
       </Routes>
-      <Footer></Footer>
+      <Footer/>
+      <ChatAssistant />
     </BrowserRouter>
   );
 }
