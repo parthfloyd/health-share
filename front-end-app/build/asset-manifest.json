@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "/static/css/main.21cbc32f.css",
-    "main.js": "/static/js/main.cfb33579.js",
+    "main.css": "/static/css/main.04cb4b8e.css",
+    "main.js": "/static/js/main.ed67bbb9.js",
     "static/media/Lakshay.jpg": "/static/media/Lakshay.21a252c9334a8cdbdbc5.jpg",
     "static/media/Fernando_Carvalho.jpg": "/static/media/Fernando_Carvalho.b73798ef883a89f71348.jpg",
     "static/media/img7.png": "/static/media/img7.a00797aa98ddf42eaa9e.png",
@@ -17,11 +17,11 @@
     "static/media/Parth.jpeg": "/static/media/Parth.ac2eed2b68152b30736f.jpeg",
     "static/media/Sanjana.jpeg": "/static/media/Sanjana.78603c4fe32288b0a699.jpeg",
     "index.html": "/index.html",
-    "main.21cbc32f.css.map": "/static/css/main.21cbc32f.css.map",
-    "main.cfb33579.js.map": "/static/js/main.cfb33579.js.map"
+    "main.04cb4b8e.css.map": "/static/css/main.04cb4b8e.css.map",
+    "main.ed67bbb9.js.map": "/static/js/main.ed67bbb9.js.map"
   },
   "entrypoints": [
-    "static/css/main.21cbc32f.css",
-    "static/js/main.cfb33579.js"
+    "static/css/main.04cb4b8e.css",
+    "static/js/main.ed67bbb9.js"
   ]
 }
