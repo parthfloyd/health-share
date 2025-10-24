@@ -44,7 +44,7 @@ router.post("/", async (req, res) => {
 
         result = await qdrant.query("healthshare", {
           query: embedding,
-          limit: 2,
+          limit: 8,
           with_payload: true,
         });
 

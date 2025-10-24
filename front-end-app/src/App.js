@@ -13,16 +13,15 @@ function App() {
   return (
     <BrowserRouter>
       <Navbar></Navbar>
+      <ChatAssistant/>
       <Routes>
         <Route exact path="/" element={<Landing />} />
         <Route exact path="/visualize" element={<Home />} />
         <Route exact path="/search" element={<Search />} />
         <Route exact path="/analyze" element={<Analytics />} />
-        <Route exact path="/chat" element={<LLMChat />} />
         <Route path="/article/:articleId" element={<Article />} />
       </Routes>
       <Footer/>
-      <ChatAssistant />
     </BrowserRouter>
   );
 }
