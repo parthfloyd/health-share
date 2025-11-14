@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Alert, Spinner, Card } from 'react-bootstrap';
-import { FaChartPie, FaChartLine, FaTachometerAlt, FaInfoCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Alert, Spinner, Card, Button } from 'react-bootstrap';
+import { FaChartPie, FaChartLine, FaTachometerAlt, FaInfoCircle, FaShareAlt } from 'react-icons/fa';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AdvancedSearch from './AdvancedSearch';
 import ComparisonView from './ComparisonView';
 import '../styles/ComparisonView.css';
@@ -11,75 +12,90 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
 
-  // Utility function to ensure search parameters are properly formatted
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // ✅ Utility function to sanitize search parameters
   const sanitizeSearchParams = (params) => {
     if (!params) return null;
-    
-    // Create a copy to avoid mutating the original
     const sanitized = { ...params };
-    
-    // Convert empty strings to null for consistency
+
     if (sanitized.startDate === '') sanitized.startDate = null;
     if (sanitized.endDate === '') sanitized.endDate = null;
-    
-    // Ensure sources is always an array
     if (!sanitized.sources) sanitized.sources = [];
-    
-    // Ensure emotions is always a string
     if (!sanitized.emotions) sanitized.emotions = 'All';
-    
-    // Ensure label is provided
     if (!sanitized.label) sanitized.label = 'Unnamed Query';
-    
+
     return sanitized;
   };
 
-  // Helper function to prepare data for visualization components
+  // ✅ Prepare visualization data
   const prepareVisualizationData = (queries) => {
-    if (!Array.isArray(queries)) {
-      queries = [queries];
-    }
-    
-    return queries.map(query => {
+    if (!Array.isArray(queries)) queries = [queries];
+
+    return queries.map((query) => {
       const sanitized = sanitizeSearchParams(query);
-      
-      // Add additional properties that might be needed by visualizations
       return {
         ...sanitized,
-        // Use empty arrays rather than null for collections
         sources: sanitized.sources || [],
-        // Ensure we use consistent date formats
         startDate: sanitized.startDate || '',
         endDate: sanitized.endDate || '',
-        // Provide a unique ID for each query
         queryId: `query-${Math.random().toString(36).substr(2, 9)}`
       };
     });
   };
 
+  // ✅ Load snapshot from URL if present
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const snapshot = params.get('data');
+    if (snapshot) {
+      try {
+        const decoded = JSON.parse(decodeURIComponent(snapshot));
+        setSearchPerformed(true);
+        const processed = prepareVisualizationData(decoded);
+        setSearchResults(processed);
+      } catch (err) {
+        console.error('Error loading snapshot:', err);
+        setError('Failed to load shared snapshot.');
+      }
+    }
+  }, [location.search]);
+
+  // ✅ Handle new search
   const handleSearch = (queries) => {
     setLoading(true);
     setError(null);
     setSearchPerformed(true);
-    
-    // Simulate API delay for demo purposes
+
+    // Simulate API delay
     setTimeout(() => {
       try {
-        // Process and prepare data for visualizations
         const processedQueries = prepareVisualizationData(queries);
         setSearchResults(processedQueries);
         setLoading(false);
+
+        // Save snapshot to URL for sharing
+        const snapshot = encodeURIComponent(JSON.stringify(queries));
+        navigate(`?data=${snapshot}`, { replace: true });
       } catch (err) {
         console.error('Error processing search:', err);
         setError('An error occurred while processing your search. Please try again.');
         setLoading(false);
       }
-    }, 800); // Simulated delay to show loading state
+    }, 800);
+  };
+
+  // ✅ Copy snapshot link to clipboard
+  const handleShareSnapshot = () => {
+    const snapshotUrl = window.location.href;
+    navigator.clipboard.writeText(snapshotUrl);
+    alert('✅ Dashboard snapshot link copied to clipboard!');
   };
 
   return (
     <div className="dashboard-container">
-      {/* Dashboard Header */}
+      {/* ===== HEADER ===== */}
       <div className="dashboard-header text-center">
         <Container fluid>
           <Row className="justify-content-center">
@@ -94,11 +110,12 @@ const Dashboard = () => {
           </Row>
         </Container>
       </div>
-      
+
+      {/* ===== MAIN CONTENT ===== */}
       <Container fluid>
         <Row className="justify-content-center">
           <Col xs={12} lg={12}>
-            {/* Search Card with improved styling */}
+            {/* === SEARCH CARD === */}
             <Card className="search-card mb-3 shadow-sm">
               <Card.Header>
                 <div className="d-flex justify-content-between align-items-center">
@@ -114,37 +131,48 @@ const Dashboard = () => {
                 <AdvancedSearch onSearch={handleSearch} />
               </Card.Body>
             </Card>
-            
-            {/* Error display */}
+
+            {/* === ERROR === */}
             {error && (
               <Alert variant="danger" className="mt-3 fade-in">
                 <Alert.Heading>Error</Alert.Heading>
                 <p>{error}</p>
               </Alert>
             )}
-            
-            {/* Loading indicator */}
+
+            {/* === LOADING === */}
             {loading ? (
               <div className="text-center p-4 fade-in bg-light rounded shadow-sm mb-3">
-                <Spinner animation="border" role="status" variant="primary" style={{ width: '3rem', height: '3rem' }}>
+                <Spinner
+                  animation="border"
+                  role="status"
+                  variant="primary"
+                  style={{ width: '3rem', height: '3rem' }}
+                >
                   <span className="visually-hidden">Loading...</span>
                 </Spinner>
-                <p className="mt-3 text-primary fw-bold">Processing your search request...</p>
-                <p className="text-muted">This may take a few moments depending on the amount of data.</p>
-                
+                <p className="mt-3 text-primary fw-bold">
+                  Processing your search request...
+                </p>
+                <p className="text-muted">
+                  This may take a few moments depending on the amount of data.
+                </p>
                 <div className="progress mt-3" style={{ height: '6px' }}>
-                  <div 
-                    className="progress-bar progress-bar-striped progress-bar-animated" 
-                    role="progressbar" 
+                  <div
+                    className="progress-bar progress-bar-striped progress-bar-animated"
+                    role="progressbar"
                     style={{ width: '100%' }}
-                    aria-valuenow="100" 
-                    aria-valuemin="0" 
-                    aria-valuemax="100"
                   ></div>
                 </div>
               </div>
             ) : searchPerformed && searchResults.length > 0 ? (
               <div className="slide-in">
+                {/* === SHARE SNAPSHOT BUTTON === */}
+                <div className="text-end mb-3">
+                  <Button variant="outline-primary" onClick={handleShareSnapshot}>
+                    <FaShareAlt className="me-2" /> Share Dashboard Snapshot
+                  </Button>
+                </div>
                 <ComparisonView searchResults={searchResults} />
               </div>
             ) : searchPerformed ? (
@@ -168,4 +196,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

@@ -1277,4 +1277,99 @@ router.get("/api/emotion-spider", async (req, res, next) => {
   }
 });
 
+// ==================== FIXED ENDPOINT: Emotion Trends Over Time ====================
+router.get("/api/emotion-trends", async (req, res) => {
+  try {
+    console.log("🔥 Incoming Query:", req.query);
+
+    const {
+      sources = "",
+      startDate,
+      endDate,
+      emotions: emotionFilters,
+      interval = "week",
+    } = req.query;
+
+    let whereClause = "1=1";
+    const queryParams = [];
+    let paramCounter = 1;
+
+    // FILTER: Sources
+    if (sources && sources.trim() !== "") {
+      const srcArray = sources.split(",").filter(Boolean);
+      if (srcArray.length > 0) {
+        const placeholders = srcArray.map(() => `$${paramCounter++}`).join(", ");
+        whereClause += ` AND data_source IN (${placeholders})`;
+        queryParams.push(...srcArray);
+      }
+    }
+
+    // FILTER: Dates
+    if (startDate) {
+      whereClause += ` AND created_at::timestamp >= $${paramCounter++}`;
+      queryParams.push(startDate);
+    }
+    if (endDate) {
+      whereClause += ` AND created_at::timestamp <= $${paramCounter++}`;
+      queryParams.push(endDate);
+    }
+
+    // FILTER: Emotions (match DB lowercase but return capitalized)
+    if (emotionFilters && emotionFilters.trim() !== "") {
+      const emoArray = emotionFilters.split(",").filter(e => e !== "" && e !== "All");
+
+      if (emoArray.length > 0) {
+        const conditions = emoArray.map(
+          () => `LOWER(dominant_emotion) = LOWER($${paramCounter++})`
+        );
+        whereClause += ` AND (${conditions.join(" OR ")})`;
+        queryParams.push(...emoArray);
+      }
+    }
+
+    // SQL Query — lowercase only in DB comparison
+    const sqlQuery = `
+      SELECT
+        DATE_TRUNC('${interval}', created_at::timestamp) AS period,
+        LOWER(dominant_emotion) AS dominant_emotion,
+        COUNT(*) AS count
+      FROM rawdata_with_emotion
+      WHERE ${whereClause}
+      GROUP BY period, dominant_emotion
+      ORDER BY period ASC;
+    `;
+
+    console.log("📌 SQL:", sqlQuery);
+    console.log("📌 Params:", queryParams);
+
+    const result = await db.query(sqlQuery, queryParams);
+
+    // FORMAT RESULT — convert to capitalized keys (IMPORTANT FIX)
+    const grouped = {};
+
+    result.rows.forEach((row) => {
+      const period = new Date(row.period).toISOString().split("T")[0];
+      if (!grouped[period]) grouped[period] = { period };
+
+      const emo = row.dominant_emotion; // 'anger', 'fear'
+      const formatted =
+        emo.charAt(0).toUpperCase() + emo.slice(1); // 'Anger', 'Fear'
+
+      grouped[period][formatted] = parseInt(row.count, 10);
+    });
+
+    const data = Object.values(grouped);
+
+    return res.status(200).json({
+      interval,
+      data,
+      totalPoints: data.length,
+    });
+  } catch (err) {
+    console.error("🔥 FULL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+
 module.exports = router;
