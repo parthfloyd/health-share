@@ -275,23 +275,9 @@ function Home() {
               value={queryString}
               onChange={(e) => setQueryString(e.target.value)}
             />
-            <SearchIcon
-              style={{
-                position: "absolute",
-                right: "15px",
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: "1.5rem",
-                cursor: "pointer",
-                color: "#5894b8",
-                transition: "color 0.3s",
-              }}
-              onClick={() => queryString && handleQuery(queryString, 1)}
-            />
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Link to="/emotions">
             <button
               style={{
                 marginLeft: "10px",
@@ -308,10 +294,10 @@ function Home() {
               }}
               onMouseEnter={(e) => (e.target.style.backgroundColor = "#99ceed")}
               onMouseLeave={(e) => (e.target.style.backgroundColor = "inherit")}
+              onClick={() => queryString && handleQuery(queryString, 1)}
             >
               Search
             </button>
-          </Link>
 
           <TuneIcon
             style={{
