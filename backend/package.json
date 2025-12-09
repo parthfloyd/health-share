@@ -7,6 +7,8 @@
   },
   "dependencies": {
     "@mui/styles": "^5.15.15",
+    "@qdrant/js-client-rest": "^1.14.0",
+    "axios": "^1.8.4",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
     "debug": "~2.6.9",

@@ -5,7 +5,9 @@ import Navbar from "./components/Navbar.js";
 import Footer from "./components/Footer.js";
 import Search from "./components/AdvancedSearch.js";
 import Article from "./pages/DisplayArticle.js";
-// import Visualizations from './components/Visualizations';
+import LLMChat from "./components/LLMChat.js";
+import ChatAssistant from "./components/ChatAssistant";
+
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
@@ -13,6 +15,7 @@ function App() {
   return (
     <BrowserRouter>
       <Navbar></Navbar>
+      <ChatAssistant/>
       <Routes>
         <Route exact path="/" element={<Landing />} />
         <Route exact path="/visualize" element={<Home />} />
@@ -22,7 +25,7 @@ function App() {
         <Route exact path="/emotions" element={<Analytics />} />
         <Route path="/article/:articleId" element={<Article />} />
       </Routes>
-      <Footer></Footer>
+      <Footer/>
     </BrowserRouter>
   );
 }
