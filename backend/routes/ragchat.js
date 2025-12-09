@@ -8,6 +8,39 @@ const path = require("path");
 // === Qdrant Client ===
 const qdrant = new QdrantClient({ host: "localhost", port: 6333 });
 
+const manualQA = [
+  {
+    question: "What does HealthShare do?",
+    expected_answer:
+      "HealthShare is a real-time public health monitoring platform that collects information from tweets, news sources, and online data streams to track disease trends, outbreaks, and health sentiment.",
+    reference:
+      "HealthShare is a real-time health analytics platform that monitors outbreaks by collecting tweets, news, and health signals."
+  },
+  {
+    question: "How does HealthShare collect real-time tweets?",
+    expected_answer:
+      "HealthShare uses Twitter’s API to stream tweets containing health-related keywords.",
+    reference:
+      "HealthShare uses the Twitter streaming API to collect real-time tweets containing health-related keywords."
+  },
+  {
+    question: "What types of data does HealthShare analyze?",
+    expected_answer:
+      "HealthShare analyzes tweets, news, online reports, and public health signals.",
+    reference:
+      "HealthShare analyzes tweets, news, online reports, and public health indicators."
+  },
+  {
+    question: "How does HealthShare help users?",
+    expected_answer:
+      "HealthShare helps users understand real-time disease trends by visualizing spikes, identifying outbreaks, and summarizing public health signals.",
+    reference:
+      "HealthShare visualizes public health signals to help users track outbreaks and trends."
+  }
+];
+
+
+
 router.post("/", async (req, res) => {
   const { message } = req.body;
 
@@ -84,5 +117,90 @@ router.post("/", async (req, res) => {
     res.status(500).json({ error: "RAG response failed." });
   }
 });
+
+router.post("/debug", async (req, res) => {
+  const { message, question } = req.body;
+  const userQuestion = question || message;
+
+  if (!userQuestion) {
+    return res.status(400).json({
+      question: "",
+      expected_answer: "",
+      answer: "No question provided",
+      contexts: []
+    });
+  }
+
+  // attach manual expected_answer
+  const manual = manualQA.find(
+    (x) => x.question.toLowerCase() === userQuestion.toLowerCase()
+  );
+
+  const expected_answer = manual ? manual.expected_answer : "";
+
+  try {
+    // === Embedding ===
+    const escaped = userQuestion.replace(/"/g, '\\"');
+    const scriptPath = path.join(__dirname, "../embedding/generate_embedding.py");
+    const embeddingJSON = execSync(`python3 "${scriptPath}" "${escaped}"`).toString();
+    const embedding = JSON.parse(embeddingJSON);
+
+    // === Qdrant Retrieval ===
+    let result;
+    try {
+      result = await qdrant.query("healthshare", {
+        query: embedding,
+        limit: 5,
+        with_payload: true
+      });
+    } catch (e) {
+      result = { points: [] };
+    }
+
+    const contexts = (result.points || []).map(
+      (p) => p?.payload?.text || ""
+    );
+
+    // === Prompt ===
+    const prompt = `
+Use the following context:
+${contexts.join("\n\n")}
+
+Question: ${userQuestion}
+Answer:
+`;
+
+    // === LLM Answer ===
+    let finalAnswer = "LLM failed.";
+    try {
+      const llm = await axios.post("http://127.0.0.1:11434/api/chat", {
+        model: "llama3.2",
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+      });
+
+      finalAnswer = llm?.data?.message?.content || "LLM returned no content";
+    } catch (e) {}
+
+    res.json({
+      question: userQuestion,
+      expected_answer,
+      reference: manual?.reference || "",
+      answer: finalAnswer,
+      contexts
+    });
+    
+
+  } catch (e) {
+    res.json({
+      question: userQuestion,
+      expected_answer,
+      answer: "Unexpected failure.",
+      contexts: []
+    });
+  }
+});
+
+
 
 module.exports = router;
